@@ -25,4 +25,9 @@ class AuthorEntity {
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }
+
+  @override
+  String toString() {
+    return 'AuthorEntity(id: $id, name: $name, isFavorite: $isFavorite)';
+  }
 }

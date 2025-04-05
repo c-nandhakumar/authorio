@@ -33,15 +33,17 @@ class _AuthorCardState extends State<AuthorCard> {
         children: [
           AuthorInfo(author: author),
           Spacer(),
-          IconButton(
-            icon: Icon(
-              author.isFavorite
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              color: author.isFavorite ? AppColors.primary : null,
-            ),
-            onPressed: () => provider.toggleFavorite(author.id),
-          ),
+          !provider.isSearching
+              ? IconButton(
+                icon: Icon(
+                  author.isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_rounded,
+                  color: author.isFavorite ? Colors.red : AppColors.secondary,
+                ),
+                onPressed: () => provider.toggleFavorite(author.id),
+              )
+              : SizedBox(),
           SizedBox(width: 8),
           OutlinedButton(
             onPressed: () {

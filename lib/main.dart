@@ -30,6 +30,7 @@ class AuthorIO extends StatelessWidget {
       child: MaterialApp(
         title: "AuthorIO",
         theme: ThemeData(
+          scaffoldBackgroundColor: Colors.white,
           fontFamily: fontFamily,
           dialogTheme: DialogTheme(
             shape: RoundedRectangleBorder(

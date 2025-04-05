@@ -14,7 +14,7 @@ void showDeleteConfirmation(BuildContext context, AuthorEntity author) {
           insetPadding: const EdgeInsets.symmetric(horizontal: 22),
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-            constraints: BoxConstraints(maxWidth: 360, maxHeight: 250),
+            constraints: BoxConstraints(maxWidth: 360, maxHeight: 240),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

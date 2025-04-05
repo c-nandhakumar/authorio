@@ -56,22 +56,27 @@ class _AuthorCardState extends State<AuthorCard>
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AuthorInfo(author: author),
-              Spacer(),
-              !provider.isSearching
-                  ? IconButton(
-                    iconSize: 28,
-                    icon: AuthorFavoriteIcon(isFavorite: author.isFavorite),
-                    onPressed: () => provider.toggleFavorite(author.id),
-                  )
-                  : SizedBox(),
-              SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: () {
-                  showDeleteConfirmation(context, author);
-                },
-                child: Text("Delete"),
+              Flexible(child: AuthorInfo(author: author)),
+              Row(
+                children: [
+                  !provider.isSearching
+                      ? IconButton(
+                        iconSize: 28,
+                        icon: AuthorFavoriteIcon(isFavorite: author.isFavorite),
+                        onPressed: () => provider.toggleFavorite(author.id),
+                      )
+                      : SizedBox(),
+
+                  SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      showDeleteConfirmation(context, author);
+                    },
+                    child: Text("Delete"),
+                  ),
+                ],
               ),
             ],
           ),

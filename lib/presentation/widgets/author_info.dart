@@ -20,21 +20,25 @@ class AuthorInfo extends StatelessWidget {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 12, top: 4, bottom: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                author.name,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              Text(
-                timeAgo(author.updated),
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
-              ),
-            ],
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12, top: 4, bottom: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  author.name,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                Text(
+                  timeAgo(author.updated),
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+                ),
+              ],
+            ),
           ),
         ),
       ],

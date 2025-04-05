@@ -11,10 +11,13 @@ class AuthorInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundImage: NetworkImage(
-            "${dotenv.get("BASE_URL")}${author.imageUrl}",
+        Hero(
+          tag: author.id,
+          child: CircleAvatar(
+            radius: 24,
+            backgroundImage: NetworkImage(
+              "${dotenv.get("BASE_URL")}${author.imageUrl}",
+            ),
           ),
         ),
         Padding(

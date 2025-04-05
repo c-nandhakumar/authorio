@@ -15,9 +15,11 @@ class AuthorProvider extends ChangeNotifier {
   String? _errorMessage;
   String? _nextPageToken;
   bool hasMore = true;
+  bool _isError = false;
   String? get errorMessage => _errorMessage;
   bool _isSearching = false;
   bool get isSearching => _isSearching;
+  bool get isError => _isError;
   List<AuthorEntity> get authors => _isSearching ? _searchResults : _authors;
 
   AuthorProvider({required this.repository});
@@ -36,6 +38,7 @@ class AuthorProvider extends ChangeNotifier {
 
   Future<void> _fetchAuthors() async {
     isLoading = true;
+    _isError = false;
     notifyListeners();
     _errorMessage = null;
 
@@ -49,7 +52,8 @@ class AuthorProvider extends ChangeNotifier {
         hasMore = _nextPageToken != null;
 
       case Failure(:final failureType):
-        Log.i("Erorr : ${failureType.message}");
+        Log.i("Error : ${failureType.message}");
+        _isError = true;
         _errorMessage = _mapFailureToMessage(failureType);
     }
 

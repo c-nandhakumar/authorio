@@ -27,12 +27,13 @@ class AuthorListScreenState extends State<AuthorListScreen> {
 
     _scrollController =
         ScrollController()..addListener(() {
-          print(
-            "*********Viewport not filled, fetching more... ${_scrollController.position.maxScrollExtent} -- ${_scrollController.position.pixels}",
+          Log.i(
+            "*Viewport not filled, fetching more... ${_scrollController.position.maxScrollExtent} -- ${_scrollController.position.pixels}",
           );
           if (_scrollController.position.pixels >=
                   _scrollController.position.maxScrollExtent - 100 &&
-              !provider.isSearching) {
+              !provider.isSearching &&
+              !provider.isError) {
             Log.i("Fetch more data");
             provider.fetchMoreAuthors();
           }
@@ -104,6 +105,28 @@ class AuthorListScreenState extends State<AuthorListScreen> {
                       (provider.hasMore && !provider.isSearching ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == provider.authors.length) {
+                      if (provider.isError) {
+                        return Container(
+                          child: Column(
+                            children: [
+                              SizedBox(height: 8),
+                              Image.asset("assets/images/dinobanner.jpg"),
+                              SizedBox(height: 8),
+                              Text(
+                                "${provider.errorMessage}",
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              SizedBox(height: 8),
+                              OutlinedButton(
+                                onPressed: () {
+                                  provider.fetchMoreAuthors();
+                                },
+                                child: const Text("Retry"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(16),
@@ -187,7 +210,7 @@ class AuthorListScreenState extends State<AuthorListScreen> {
             "authors list size : $size - ${size * 75} - ${context.screenHeight}",
           );
           //Checking with the screen height in order to fetch the data
-          if ((size * 75) < context.screenHeight) {
+          if ((size * 75) < context.screenHeight && !provider.isError) {
             _checkAndFetchMoreIfNeeded(provider);
           }
         }

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="authorio"
+        android:label="AuthorIO"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

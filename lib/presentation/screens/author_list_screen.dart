@@ -1,4 +1,5 @@
 import 'package:authorio/core/utils/log.dart';
+import 'package:authorio/core/utils/screen_extensions.dart';
 import 'package:authorio/presentation/providers/author_provider.dart';
 import 'package:authorio/presentation/style/colors.dart';
 import 'package:authorio/presentation/widgets/author_card.dart';
@@ -26,8 +27,11 @@ class AuthorListScreenState extends State<AuthorListScreen> {
 
     _scrollController =
         ScrollController()..addListener(() {
+          print(
+            "*********Viewport not filled, fetching more... ${_scrollController.position.maxScrollExtent} -- ${_scrollController.position.pixels}",
+          );
           if (_scrollController.position.pixels >=
-                  _scrollController.position.maxScrollExtent - 150 &&
+                  _scrollController.position.maxScrollExtent - 100 &&
               !provider.isSearching) {
             Log.i("Fetch more data");
             provider.fetchMoreAuthors();
@@ -44,70 +48,76 @@ class AuthorListScreenState extends State<AuthorListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<AuthorProvider>(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
+        toolbarHeight: 84,
         title: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
+          preferredSize: const Size.fromHeight(84),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
             child: _buildSearchBar(context),
           ),
         ),
-        bottom:
-            provider.isSearching
-                ? PreferredSize(
-                  preferredSize: const Size.fromHeight(36),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Search Results",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        Text(
-                          "${provider.authors.length} ${provider.authors.length > 1 ? "founds" : "found"}",
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                : null,
       ),
       body: Consumer<AuthorProvider>(
         builder: (context, provider, child) {
-          return ListView.builder(
-            controller: _scrollController,
-            itemCount:
-                provider.authors.length +
-                (provider.hasMore && !provider.isSearching ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == provider.authors.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
+          return Column(
+            children: [
+              provider.isSearching
+                  ? PreferredSize(
+                    preferredSize: const Size.fromHeight(36),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Search Results",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black.withValues(alpha: 0.6),
+                            ),
+                          ),
+                          Text(
+                            "${provider.authors.length} ${provider.authors.length > 1 ? "founds" : "found"}",
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  : SizedBox(),
+              Expanded(
+                child: ListView.builder(
+                  // shrinkWrap: true,
+                  controller: _scrollController,
+                  itemCount:
+                      provider.authors.length +
+                      (provider.hasMore && !provider.isSearching ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == provider.authors.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
 
-              final author = provider.authors[index];
-              return AuthorCard(author: author);
-            },
+                    final author = provider.authors[index];
+                    return AuthorCard(author: author, key: ValueKey(author.id));
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -127,8 +137,10 @@ class AuthorListScreenState extends State<AuthorListScreen> {
       },
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       decoration: InputDecoration(
-        hintStyle: TextStyle(fontSize: 14),
-
+        hintStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.black.withValues(alpha: 0.65),
+        ),
         hintText: "Search...",
         suffixIcon:
             _searchController.text.isNotEmpty
@@ -137,6 +149,7 @@ class AuthorListScreenState extends State<AuthorListScreen> {
                   onPressed: () {
                     _searchController.clear();
                     provider.clearSearch();
+                    FocusScope.of(context).unfocus();
                   },
                 )
                 : const Icon(Icons.search),
@@ -163,10 +176,21 @@ class AuthorListScreenState extends State<AuthorListScreen> {
         _scrollController.position.maxScrollExtent <=
             _scrollController.position.viewportDimension &&
         provider.hasMore) {
-      Log.i("Viewport not filled, fetching more...");
+      Log.d(
+        "Viewport not filled, fetching more... ${_scrollController.position.maxScrollExtent} -- ${_scrollController.position.viewportDimension}",
+      );
+
       provider.fetchMoreAuthors().then((_) {
-        // Keep checking recursively until content fills screen or no more items
-        _checkAndFetchMoreIfNeeded(provider);
+        final size = provider.authors.length;
+        if (mounted) {
+          Log.i(
+            "authors list size : $size - ${size * 75} - ${context.screenHeight}",
+          );
+          //Checking with the screen height in order to fetch the data
+          if ((size * 75) < context.screenHeight) {
+            _checkAndFetchMoreIfNeeded(provider);
+          }
+        }
       });
     }
   }

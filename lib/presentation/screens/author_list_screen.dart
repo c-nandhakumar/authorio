@@ -27,9 +27,6 @@ class AuthorListScreenState extends State<AuthorListScreen> {
 
     _scrollController =
         ScrollController()..addListener(() {
-          Log.i(
-            "*Viewport not filled, fetching more... ${_scrollController.position.maxScrollExtent} -- ${_scrollController.position.pixels}",
-          );
           if (_scrollController.position.pixels >=
                   _scrollController.position.maxScrollExtent - 100 &&
               !provider.isSearching &&

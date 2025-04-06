@@ -111,6 +111,9 @@ class AuthorProvider extends ChangeNotifier {
       _searchResults.removeWhere((a) => a.id == authorId);
     }
 
+    //Keeping track of deleted authors in local (since there is no API to update)
+    repository.deleteAuthor(authorId.toString());
+
     notifyListeners();
   }
 
@@ -125,6 +128,8 @@ class AuthorProvider extends ChangeNotifier {
         return "Please check your internet connection.";
       case ParsingFailure():
         return "Something went wrong while loading data.";
+      case TimeoutFailure():
+        return "The server took too long to respond. Try again later.";
       case UnknownFailure():
         return "An unexpected error occurred.";
     }

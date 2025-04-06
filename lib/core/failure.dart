@@ -14,3 +14,7 @@ class ParsingFailure extends FailureType {
 class UnknownFailure extends FailureType {
   UnknownFailure() : super("An unknown error occurred");
 }
+
+class TimeoutFailure extends FailureType {
+  TimeoutFailure(super.message);
+}

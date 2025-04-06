@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 
 void main() async {
   await dotenv.load();
-  initializeDependencies();
+  await initializeDependencies();
   runApp(const AuthorIO());
 }
 

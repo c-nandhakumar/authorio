@@ -82,13 +82,6 @@ flutter:
   # https://flutter.dev/to/asset-from-package
 
   fonts:
-    - family: NotoSans
-      fonts:
-        - asset: assets/fonts/NotoSans-Regular.ttf
-        - asset: assets/fonts/NotoSans-Bold.ttf
-        - asset: assets/fonts/NotoSans-ExtraBold.ttf
-        - asset: assets/fonts/NotoSans-Medium.ttf
-        - asset: assets/fonts/NotoSans-SemiBold.ttf
     - family: NotoSansJP
       fonts:
         - asset: assets/fonts/NotoSansJP-Regular.ttf

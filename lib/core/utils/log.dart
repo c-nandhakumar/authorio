@@ -4,7 +4,7 @@ import 'package:logger/logger.dart';
 Logger Log = Logger(
   printer: PrettyPrinter(
     errorMethodCount: 8,
-    lineLength: 120,
+    lineLength: 2,
     colors: true,
     printEmojis: true,
     dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,

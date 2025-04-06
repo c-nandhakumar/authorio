@@ -9,10 +9,12 @@ class ApiClient {
   ApiClient({required this.client});
 
   Future<Map<String, dynamic>> get({
-    required String endpoint,          
+    required String endpoint,
     Map<String, String>? queryParams,
   }) async {
-    final uri = Uri.parse('$_baseUrl$endpoint').replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      '$_baseUrl$endpoint',
+    ).replace(queryParameters: queryParams);
 
     final response = await client.get(uri);
     if (response.statusCode != 200) {

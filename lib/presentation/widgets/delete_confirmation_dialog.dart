@@ -1,12 +1,14 @@
 import 'package:authorio/domain/entities/author_entity.dart';
-import 'package:authorio/presentation/providers/author_provider.dart';
 import 'package:authorio/presentation/style/colors.dart';
 import 'package:authorio/presentation/style/text.dart';
 import 'package:authorio/presentation/widgets/author_info.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-void showDeleteConfirmation(BuildContext context, AuthorEntity author) {
+void showDeleteConfirmation(
+  BuildContext context,
+  AuthorEntity author,
+  VoidCallback onDelete,
+) {
   showDialog(
     context: context,
     builder:
@@ -76,9 +78,7 @@ void showDeleteConfirmation(BuildContext context, AuthorEntity author) {
                           ),
                         ),
                         onPressed: () {
-                          context.read<AuthorProvider>().deleteAuthor(
-                            author.id,
-                          );
+                          onDelete();
                           Navigator.pop(context);
                         },
                         child: const Text("Delete"),

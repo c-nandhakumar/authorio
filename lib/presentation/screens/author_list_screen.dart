@@ -1,8 +1,11 @@
 import 'package:authorio/core/utils/log.dart';
 import 'package:authorio/core/utils/screen_extensions.dart';
+import 'package:authorio/domain/entities/author_entity.dart';
 import 'package:authorio/presentation/providers/author_provider.dart';
 import 'package:authorio/presentation/style/colors.dart';
 import 'package:authorio/presentation/widgets/author_card.dart';
+import 'package:authorio/presentation/widgets/loader.dart';
+import 'package:authorio/presentation/widgets/retry_error_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,6 +19,7 @@ class AuthorListScreen extends StatefulWidget {
 class AuthorListScreenState extends State<AuthorListScreen> {
   late ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
   @override
   void initState() {
@@ -27,12 +31,18 @@ class AuthorListScreenState extends State<AuthorListScreen> {
 
     _scrollController =
         ScrollController()..addListener(() {
+          // debugPrint(
+          //   "ScrollController pixels : ${_scrollController.position.pixels}",
+          // );
           if (_scrollController.position.pixels >=
-                  _scrollController.position.maxScrollExtent - 100 &&
+                  _scrollController.position.maxScrollExtent &&
               !provider.isSearching &&
               !provider.isError) {
             Log.i("Fetch more data");
-            provider.fetchMoreAuthors();
+            provider.fetchMoreAuthors().then((newItemsLength) {
+              final startIndex = provider.authors.length - newItemsLength;
+              _insertAuthors(provider.authors, startIndex);
+            });
           }
         });
   }
@@ -42,6 +52,41 @@ class AuthorListScreenState extends State<AuthorListScreen> {
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _insertAuthors(List<AuthorEntity> authors, int startIndex) {
+    for (int i = startIndex; i < authors.length; i++) {
+      _listKey.currentState?.insertItem(i);
+    }
+  }
+
+  void _removeAuthor(AuthorEntity author) {
+    final provider = context.read<AuthorProvider>();
+    int index = provider.getFullAuthorList.indexWhere((a) => a.id == author.id);
+    Log.i("Index removal : $index");
+    if (index != -1) {
+      context.read<AuthorProvider>().deleteAuthor(author.id);
+      _listKey.currentState?.removeItem(
+        index,
+        (context, animation) => FadeTransition(
+          opacity: animation,
+          child: SizeTransition(
+            sizeFactor: animation,
+            child: AuthorCard(
+              author: author,
+              key: ValueKey(author.id),
+              onDelete: () {},
+            ),
+          ),
+        ),
+        duration: Duration(milliseconds: 300),
+      );
+
+      final provider = context.read<AuthorProvider>();
+      if (!provider.isSearching) {
+        _checkAndFetchMoreIfNeeded(provider);
+      }
+    }
   }
 
   @override
@@ -94,48 +139,74 @@ class AuthorListScreenState extends State<AuthorListScreen> {
                   )
                   : SizedBox(),
               Expanded(
-                child: ListView.builder(
-                  // shrinkWrap: true,
-                  controller: _scrollController,
-                  itemCount:
-                      provider.authors.length +
-                      (provider.hasMore && !provider.isSearching ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == provider.authors.length) {
-                      if (provider.isError) {
-                        return Container(
-                          child: Column(
-                            children: [
-                              SizedBox(height: 8),
-                              Image.asset("assets/images/dinobanner.jpg"),
-                              SizedBox(height: 8),
-                              Text(
-                                "${provider.errorMessage}",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              SizedBox(height: 8),
-                              OutlinedButton(
-                                onPressed: () {
-                                  provider.fetchMoreAuthors();
-                                },
-                                child: const Text("Retry"),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
+                child:
+                    provider.isSearching
+                        ? ListView.builder(
+                          itemCount: provider.authors.length,
+                          itemBuilder: (context, index) {
+                            final author = provider.authors[index];
+                            return AuthorCard(
+                              author: author,
+                              key: ValueKey(author.id),
+                              onDelete: () => _removeAuthor(author),
+                            );
+                          },
+                        )
+                        : AnimatedList(
+                          key: _listKey,
+                          controller: _scrollController,
+                          initialItemCount:
+                              provider.authors.length +
+                              (provider.hasMore && !provider.isSearching
+                                  ? 1
+                                  : 0),
+                          itemBuilder: (context, index, animation) {
+                            final isExtraItem =
+                                index == provider.authors.length;
 
-                    final author = provider.authors[index];
-                    return AuthorCard(author: author, key: ValueKey(author.id));
-                  },
-                ),
+                            if (isExtraItem) {
+                              if (provider.isError) {
+                                return SizeTransition(
+                                  sizeFactor: animation,
+                                  child: RetryErrorWidget(
+                                    errorMessage:
+                                        provider.errorMessage ??
+                                        "Something went wrong",
+                                    onRetryPressed: () {
+                                      provider.fetchMoreAuthors().then((
+                                        newItemsLength,
+                                      ) {
+                                        int startIndex =
+                                            provider.authors.length -
+                                            newItemsLength;
+                                        _insertAuthors(
+                                          provider.authors,
+                                          startIndex,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                );
+                              }
+
+                              return SizeTransition(
+                                sizeFactor: animation,
+                                child: Loader(),
+                              );
+                            }
+
+                            final author = provider.authors[index];
+
+                            return SizeTransition(
+                              sizeFactor: animation,
+                              child: AuthorCard(
+                                author: author,
+                                key: ValueKey(author.id),
+                                onDelete: () => _removeAuthor(author),
+                              ),
+                            );
+                          },
+                        ),
               ),
             ],
           );
@@ -145,7 +216,7 @@ class AuthorListScreenState extends State<AuthorListScreen> {
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    final provider = context.read<AuthorProvider>();
+    final provider = context.watch<AuthorProvider>();
     return TextField(
       controller: _searchController,
       onChanged: (query) {
@@ -163,7 +234,7 @@ class AuthorListScreenState extends State<AuthorListScreen> {
         ),
         hintText: "Search...",
         suffixIcon:
-            _searchController.text.isNotEmpty
+            provider.isSearching
                 ? IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
@@ -192,15 +263,17 @@ class AuthorListScreenState extends State<AuthorListScreen> {
   }
 
   void _checkAndFetchMoreIfNeeded(AuthorProvider provider) {
+    // var position = _scrollController.position;
+    // Log.i(
+    //   "_maxScrollExtent : ${position.maxScrollExtent} || _scrollController.position.viewportDimension : ${position.viewportDimension}",
+    // );
     if (_scrollController.hasClients &&
         _scrollController.position.maxScrollExtent <=
             _scrollController.position.viewportDimension &&
         provider.hasMore) {
-      Log.d(
-        "Viewport not filled, fetching more... ${_scrollController.position.maxScrollExtent} -- ${_scrollController.position.viewportDimension}",
-      );
-
-      provider.fetchMoreAuthors().then((_) {
+      provider.fetchMoreAuthors().then((newItemsLength) {
+        int startIndex = provider.authors.length - newItemsLength;
+        _insertAuthors(provider.authors, startIndex);
         final size = provider.authors.length;
         if (mounted) {
           Log.i(

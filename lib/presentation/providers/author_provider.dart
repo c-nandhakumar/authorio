@@ -21,7 +21,7 @@ class AuthorProvider extends ChangeNotifier {
   bool get isSearching => _isSearching;
   bool get isError => _isError;
   List<AuthorEntity> get authors => _isSearching ? _searchResults : _authors;
-
+  List<AuthorEntity> get getFullAuthorList => _authors;
   AuthorProvider({required this.repository});
 
   Future<void> fetchInitialAuthors() async {
@@ -31,38 +31,41 @@ class AuthorProvider extends ChangeNotifier {
     await _fetchAuthors();
   }
 
-  Future<void> fetchMoreAuthors() async {
-    if (isLoading || !hasMore || _isSearching) return;
-    await _fetchAuthors();
+  Future<int> fetchMoreAuthors() async {
+    if (isLoading || !hasMore || _isSearching) return 0;
+    int newItemsLength = await _fetchAuthors();
+    return newItemsLength;
   }
 
-  Future<void> _fetchAuthors() async {
+  Future<int> _fetchAuthors() async {
     isLoading = true;
     _isError = false;
     notifyListeners();
     _errorMessage = null;
 
     final result = await repository.fetchAuthors(pageToken: _nextPageToken);
-
+    isLoading = false;
     switch (result) {
       case Success<Pair<String?, List<AuthorEntity>>>():
         final newAuthors = result.data.second;
         _authors.addAll(newAuthors);
         _nextPageToken = result.data.first;
         hasMore = _nextPageToken != null;
+        notifyListeners();
+        return newAuthors.length;
 
       case Failure(:final failureType):
         Log.i("Error : ${failureType.message}");
         _isError = true;
         _errorMessage = _mapFailureToMessage(failureType);
+        notifyListeners();
+        return 0;
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   void toggleFavorite(int authorId) {
     final index = _authors.indexWhere((a) => a.id == authorId);
+    Log.d("isFavorite(before) : ${_authors[index].isFavorite}");
     if (_isSearching) {
       for (var author in _searchResults) {
         if (author.id == authorId) {
@@ -70,14 +73,21 @@ class AuthorProvider extends ChangeNotifier {
           break;
         }
       }
+      repository.toggleFavorite(
+        authorId.toString(),
+        !_authors[index].isFavorite,
+      );
       notifyListeners();
+      return;
     }
 
+    Log.d("Toggle Favorite : $index");
     if (index != -1) {
       repository.toggleFavorite(
         authorId.toString(),
         !_authors[index].isFavorite,
       );
+      Log.d("isFavorite : ${_authors[index].isFavorite}");
       _authors[index] = _authors[index].copyWith(
         isFavorite: !_authors[index].isFavorite,
       );

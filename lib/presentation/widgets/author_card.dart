@@ -11,7 +11,8 @@ import 'package:provider/provider.dart';
 
 class AuthorCard extends StatefulWidget {
   final AuthorEntity author;
-  const AuthorCard({required this.author, super.key});
+  final VoidCallback onDelete;
+  const AuthorCard({required this.author, required this.onDelete, super.key});
 
   @override
   State<AuthorCard> createState() => _AuthorCardState();
@@ -28,6 +29,7 @@ class _AuthorCardState extends State<AuthorCard>
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
           Navigator.of(context).push(
             PageRouteBuilder(
               transitionDuration: Duration(milliseconds: 500),
@@ -72,7 +74,8 @@ class _AuthorCardState extends State<AuthorCard>
                   SizedBox(width: 8),
                   OutlinedButton(
                     onPressed: () {
-                      showDeleteConfirmation(context, author);
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      showDeleteConfirmation(context, author, widget.onDelete);
                     },
                     child: Text("Delete"),
                   ),
